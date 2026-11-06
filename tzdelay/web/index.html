@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Timezone delay</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/logo.png">
 <style>
 :root{
   --bg:#f4f3ef;--card:#fff;--ink:#1d1d1b;--muted:#6b6a65;--line:#e2e0d8;
@@ -17,7 +19,9 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
 main{max-width:860px;margin:0 auto;padding:28px 16px 60px}
-header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:20px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand img{width:40px;height:40px;border-radius:10px;display:block}
 h1{font-size:22px;font-weight:600;margin:0}
 h2{font-size:16px;font-weight:600;margin:0 0 14px}
 .clock{font:13px var(--mono);color:var(--muted)}
@@ -64,7 +68,10 @@ audio{width:100%;margin-top:10px}
 <body>
 <main>
   <header>
-    <h1>Timezone delay</h1>
+    <div class="brand">
+      <img src="/logo.png" alt="" width="40" height="40">
+      <h1>Timezone delay</h1>
+    </div>
     <span class="clock" id="clock"></span>
   </header>
 

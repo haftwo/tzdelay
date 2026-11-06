@@ -9,6 +9,7 @@
   <Overview>Timezone delay for radio. Takes a live HLS audio stream and plays it out again a set time later. Add stations and set delays in the web page.</Overview>
   <Category>MediaServer:Music Tools:</Category>
   <WebUI>http://[IP]:[PORT:8080]/</WebUI>
+  <Icon>https://raw.githubusercontent.com/haftwo/tzdelay/main/tzdelay/web/logo.png</Icon>
   <ExtraParams>--restart unless-stopped</ExtraParams>
   <Config Name="Web UI port" Target="8080" Default="8080" Mode="tcp" Description="Web page, API and delayed streams" Type="Port" Display="always" Required="true" Mask="false">8080</Config>
   <Config Name="Data" Target="/data" Default="/mnt/user/appdata/tzdelay" Mode="rw" Description="Stations and buffered audio. About 58 MB per hour of delay per station at 128 kbps. Keep on persistent storage." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/tzdelay</Config>

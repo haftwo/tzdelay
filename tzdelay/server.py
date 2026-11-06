@@ -115,6 +115,12 @@ def make_handler(app):
             if parts in ([""], ["index.html"]):
                 with open(os.path.join(WEB_DIR, "index.html"), "rb") as f:
                     return self.send(200, f.read(), "text/html; charset=utf-8")
+            if parts in (["logo.png"], ["favicon.png"]):
+                with open(os.path.join(WEB_DIR, parts[0]), "rb") as f:
+                    return self.send(200, f.read(), "image/png", cache="max-age=86400")
+            if parts == ["favicon.ico"]:
+                with open(os.path.join(WEB_DIR, "favicon.png"), "rb") as f:
+                    return self.send(200, f.read(), "image/png", cache="max-age=86400")
             if parts in (["api", "status"], ["api", "channels"]):
                 return self.send_json([channel_status(c) for c in app.list_channels()])
             if len(parts) == 3 and parts[0] == "channels":
