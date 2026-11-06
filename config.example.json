@@ -1,0 +1,29 @@
+{
+  "data_dir": "/data",
+  "listen": "0.0.0.0",
+  "port": 8080,
+  "log_level": "INFO",
+  "_note": "Stations are managed in the web page. Any listed here only seed it on the very first run.",
+  "channels": [
+    {
+      "id": "perth",
+      "name": "Network feed for Perth (+3h)",
+      "delay": "3:00:00",
+      "ingest": {
+        "type": "hls",
+        "url": "https://example.com/live/station/master.m3u8",
+        "prefer_bandwidth": "highest"
+      }
+    },
+    {
+      "id": "test-tone",
+      "name": "Test tone (+10s)",
+      "delay": 10,
+      "ingest": { "type": "capture", "input": "test", "segment_seconds": 6 }
+    }
+  ],
+  "_examples_for_later": {
+    "sound_card": { "type": "capture", "input": "alsa", "device": "hw:1,0", "channels": 2, "sample_rate": 48000, "bitrate": "256k" },
+    "livewire_aes67": { "type": "capture", "input": "aes67", "sdp": "/config/studio1.sdp", "bitrate": "256k" }
+  }
+}

@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Timezone delay</title>
+<style>
+:root{
+  --bg:#f4f3ef;--card:#fff;--ink:#1d1d1b;--muted:#6b6a65;--line:#e2e0d8;
+  --accent:#1f5fae;--ok:#2e7d32;--ok-bg:#e7f3e8;--wait:#9a5b00;--wait-bg:#fbf0dc;
+  --bad:#b3261e;--bad-bg:#fbe6e4;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#181817;--card:#232321;--ink:#ecebe6;--muted:#a3a29b;--line:#36352f;
+  --accent:#7fb0ee;--ok:#8fd694;--ok-bg:#1f3322;--wait:#f0bf6a;--wait-bg:#3a2d14;--bad:#f2a49d;--bad-bg:#3d1f1c;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:28px 16px 60px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:20px}
+h1{font-size:22px;font-weight:600;margin:0}
+h2{font-size:16px;font-weight:600;margin:0 0 14px}
+.clock{font:13px var(--mono);color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+input[type=text],input[type=url],input[type=number]{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.full{margin-bottom:12px}
+.delay-in{display:flex;gap:6px;align-items:center}
+.delay-in input{width:70px;text-align:center}
+.delay-in span{font-size:13px;color:var(--muted)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:3px 10px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:7px 14px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.dark-text{color:#fff}
+@media (prefers-color-scheme:dark){.btn.primary{color:#10233b}}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.55;cursor:wait}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.err{color:var(--bad);font-size:13px;margin-top:8px;min-height:1em}
+.note{color:var(--muted);font-size:13px}
+.ch-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.ch-name{font-size:17px;font-weight:600}
+.pill{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.pill.ok{color:var(--ok);background:var(--ok-bg)}.pill.wait{color:var(--wait);background:var(--wait-bg)}.pill.bad{color:var(--bad);background:var(--bad-bg)}
+.delay-big{font:600 26px/1.1 var(--mono);margin:6px 0 2px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 16px;margin:12px 0;font-size:13px}
+.stats b{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.url{font:12px var(--mono);word-break:break-all;color:var(--muted)}
+.outurl{display:flex;gap:8px;align-items:center;margin:10px 0 12px;padding:8px 10px;border:1px dashed var(--line);border-radius:8px}
+.outurl code{flex:1;font:13px var(--mono);word-break:break-all}
+.edit{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
+.warn{font-size:13px;color:var(--wait);margin:0 0 10px}
+audio{width:100%;margin-top:10px}
+.empty{text-align:center;color:var(--muted);padding:30px}
+@media (max-width:560px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Timezone delay</h1>
+    <span class="clock" id="clock"></span>
+  </header>
+
+  <section class="card">
+    <h2>Add a station</h2>
+    <form id="add-form" novalidate>
+      <div class="row">
+        <div>
+          <label for="add-name">Name</label>
+          <input type="text" id="add-name" placeholder="e.g. Network feed for Perth" required>
+        </div>
+        <div>
+          <label>Delay</label>
+          <div class="delay-in" data-delay>
+            <input type="number" min="0" max="48" value="0" aria-label="Hours"><span>h</span>
+            <input type="number" min="0" max="59" value="0" aria-label="Minutes"><span>m</span>
+            <input type="number" min="0" max="59" value="0" aria-label="Seconds"><span>s</span>
+          </div>
+        </div>
+      </div>
+      <div class="full">
+        <label for="add-url">HLS stream URL (.m3u8)</label>
+        <input type="url" id="add-url" placeholder="https://…/playlist.m3u8" required>
+      </div>
+      <div class="presets" data-presets></div>
+      <div class="actions" style="margin-top:14px">
+        <button class="btn primary" type="submit" id="add-btn">Add station</button>
+        <span class="note">The stream is checked before it's saved.</span>
+      </div>
+      <div class="err" id="add-err" role="alert"></div>
+    </form>
+  </section>
+
+  <div id="channels"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
+<script>
+const PRESETS = [["30 min",1800],["1 h",3600],["1 h 30",5400],["2 h",7200],["2 h 30",9000],["3 h",10800]];
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---- delay inputs (h / m / s) ---- */
+function readDelay(box) {
+  const [h, m, s] = [...box.querySelectorAll("input")].map(i => Number(i.value || 0));
+  if ([h, m, s].some(n => !Number.isFinite(n) || n < 0)) return NaN;
+  return h * 3600 + m * 60 + s;
+}
+function writeDelay(box, secs) {
+  const ins = box.querySelectorAll("input");
+  ins[0].value = Math.floor(secs / 3600);
+  ins[1].value = Math.floor(secs % 3600 / 60);
+  ins[2].value = Math.floor(secs % 60);
+}
+function fillPresets(holder, box) {
+  holder.innerHTML = PRESETS.map(([l, s]) => `<button type="button" class="chip" data-s="${s}">${l}</button>`).join("");
+  holder.addEventListener("click", e => { const s = e.target.dataset.s; if (s) writeDelay(box, +s); });
+}
+
+async function api(method, path, body) {
+  const r = await fetch(path, {method, headers: {"Content-Type": "application/json"},
+                               body: body ? JSON.stringify(body) : undefined});
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+  return data;
+}
+
+/* ---- add form ---- */
+const addForm = $("#add-form"), addDelay = $("[data-delay]", addForm);
+fillPresets($("[data-presets]", addForm), addDelay);
+addForm.addEventListener("input", () => $("#add-err").textContent = "");
+addForm.addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = $("#add-name").value.trim(), url = $("#add-url").value.trim();
+  const delay = readDelay(addDelay), err = $("#add-err"), btn = $("#add-btn");
+  if (!name) return err.textContent = "Enter a name for the station.";
+  if (!/^https?:\/\//.test(url)) return err.textContent = "Enter the stream URL, starting with http:// or https://.";
+  if (!(delay >= 0) || delay > 48 * 3600) return err.textContent = "Delay must be between 0 and 48 hours.";
+  btn.disabled = true; btn.textContent = "Checking stream…";
+  try {
+    await api("POST", "/api/channels", {name, url, delay_seconds: delay});
+    addForm.reset(); writeDelay(addDelay, 0);
+    refresh();
+  } catch (x) { err.textContent = x.message; }
+  finally { btn.disabled = false; btn.textContent = "Add station"; }
+});
+
+/* ---- channel cards: built once, then only status fields update ---- */
+const cards = new Map();
+const list = $("#channels");
+
+function statusPill(c) {
+  if (c.ingest_state === "error" || c.ingest_state === "stale")
+    return ["bad", c.ingest_state === "stale" ? "Input stalled" : "Input error"];
+  if (c.ingest_state === "starting") return ["wait", "Connecting…"];
+  if (!c.output_ready) return ["wait", c.time_until_ready ? `Filling · on air in ${c.time_until_ready}` : "Filling"];
+  return ["ok", "On air"];
+}
+
+function buildCard(c) {
+  const el = document.createElement("section");
+  el.className = "card";
+  el.innerHTML = `
+    <div class="ch-top">
+      <div>
+        <div class="ch-name" data-f="name"></div>
+        <div class="delay-big" data-f="delay"></div>
+        <div class="note">delay</div>
+      </div>
+      <span class="pill" data-f="pill"></span>
+    </div>
+    <div class="stats">
+      <div><b>Source</b><span class="url" data-f="source"></span></div>
+      <div><b>Buffer</b><span data-f="buffer"></span></div>
+      <div><b>Last segment</b><span data-f="age"></span></div>
+      <div><b>Gaps</b><span data-f="gaps"></span></div>
+    </div>
+    <div class="err" data-f="lasterr"></div>
+    <div class="outurl"><code data-f="out"></code><button class="btn" data-a="copy">Copy</button></div>
+    <div class="actions">
+      <button class="btn" data-a="listen">Listen</button>
+      <button class="btn" data-a="edit">Edit</button>
+      <button class="btn danger" data-a="delete">Delete</button>
+    </div>
+    <div data-f="player"></div>
+    <form class="edit" data-f="editform" hidden novalidate>
+      <p class="warn">Changing the delay while on air makes the audio jump forward (shorter) or repeat a section (longer). Best done at a natural break.</p>
+      <div class="row">
+        <div><label>Name</label><input type="text" data-e="name"></div>
+        <div><label>Delay</label>
+          <div class="delay-in" data-e="delay">
+            <input type="number" min="0" max="48" aria-label="Hours"><span>h</span>
+            <input type="number" min="0" max="59" aria-label="Minutes"><span>m</span>
+            <input type="number" min="0" max="59" aria-label="Seconds"><span>s</span>
+          </div>
+        </div>
+      </div>
+      <div class="full" data-e="urlrow"><label>HLS stream URL</label><input type="url" data-e="url"></div>
+      <div class="presets" data-e="presets"></div>
+      <div class="actions" style="margin-top:14px">
+        <button class="btn primary" type="submit">Save</button>
+        <button class="btn" type="button" data-a="cancel">Cancel</button>
+      </div>
+      <div class="err" data-e="err" role="alert"></div>
+    </form>`;
+  const form = $('[data-f="editform"]', el), dbox = $('[data-e="delay"]', form);
+  fillPresets($('[data-e="presets"]', form), dbox);
+  form.addEventListener("input", () => $('[data-e="err"]', form).textContent = "");
+
+  el.addEventListener("click", async e => {
+    const a = e.target.dataset.a, cur = el._data;
+    if (a === "copy") {
+      navigator.clipboard?.writeText(location.origin + cur.output_url);
+      e.target.textContent = "Copied"; setTimeout(() => e.target.textContent = "Copy", 1200);
+    } else if (a === "edit") {
+      $('[data-e="name"]', form).value = cur.name;
+      $('[data-e="url"]', form).value = cur.source_url || "";
+      $('[data-e="urlrow"]', form).hidden = !cur.editable_source;
+      writeDelay(dbox, cur.delay_seconds);
+      form.hidden = false;
+    } else if (a === "cancel") {
+      form.hidden = true;
+    } else if (a === "delete") {
+      if (confirm(`Delete "${cur.name}"? Its buffered audio is deleted too, and the output URL stops working.`)) {
+        try { await api("DELETE", `/api/channels/${cur.id}`); refresh(); }
+        catch (x) { alert(x.message); }
+      }
+    } else if (a === "listen") {
+      togglePlayer(el, e.target);
+    }
+  });
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const err = $('[data-e="err"]', form), btn = $('button[type=submit]', form);
+    const name = $('[data-e="name"]', form).value.trim(), delay = readDelay(dbox);
+    const body = {name, delay_seconds: delay};
+    if (el._data.editable_source) body.url = $('[data-e="url"]', form).value.trim();
+    if (!name) return err.textContent = "Enter a name.";
+    if (!(delay >= 0) || delay > 48 * 3600) return err.textContent = "Delay must be between 0 and 48 hours.";
+    btn.disabled = true; btn.textContent = "Saving…";
+    try { await api("PUT", `/api/channels/${el._data.id}`, body); form.hidden = true; refresh(); }
+    catch (x) { err.textContent = x.message; }
+    finally { btn.disabled = false; btn.textContent = "Save"; }
+  });
+  return el;
+}
+
+function togglePlayer(el, btn) {
+  const holder = $('[data-f="player"]', el);
+  if (el._hls || holder.firstChild) {
+    el._hls?.destroy(); el._hls = null; holder.innerHTML = ""; btn.textContent = "Listen"; return;
+  }
+  if (!el._data.output_ready) { btn.textContent = "Not on air yet"; setTimeout(() => btn.textContent = "Listen", 1500); return; }
+  const audio = document.createElement("audio");
+  audio.controls = true; holder.appendChild(audio);
+  const src = el._data.output_url;
+  if (window.Hls?.isSupported()) { el._hls = new Hls(); el._hls.loadSource(src); el._hls.attachMedia(audio); }
+  else audio.src = src;  // Safari plays HLS natively
+  audio.play().catch(() => {});
+  btn.textContent = "Stop";
+}
+
+function updateCard(el, c) {
+  el._data = c;
+  const set = (f, v) => { const n = $(`[data-f="${f}"]`, el); if (n.textContent !== v) n.textContent = v; };
+  set("name", c.name); set("delay", c.delay);
+  set("source", c.source_url || `${c.ingest_type} input`);
+  set("buffer", c.buffer_depth);
+  set("age", c.last_segment_age == null ? "none yet" : `${c.last_segment_age}s ago`);
+  set("gaps", String(c.discontinuities));
+  set("out", location.origin + c.output_url);
+  set("lasterr", c.ingest_state === "ok" ? "" : (c.last_error || ""));
+  const [cls, txt] = statusPill(c), pill = $('[data-f="pill"]', el);
+  pill.className = "pill " + cls; pill.textContent = txt;
+}
+
+async function refresh() {
+  let data;
+  try { data = await api("GET", "/api/channels"); }
+  catch { return; }  // server restarting; try again next tick
+  const ids = new Set(data.map(c => c.id));
+  for (const [id, el] of cards) if (!ids.has(id)) { el._hls?.destroy(); el.remove(); cards.delete(id); }
+  for (const c of data) {
+    if (!cards.has(c.id)) { const el = buildCard(c); cards.set(c.id, el); list.appendChild(el); }
+    updateCard(cards.get(c.id), c);
+  }
+  if (!data.length) list.innerHTML = '<div class="empty">No stations yet. Add one above.</div>';
+  else $(".empty", list)?.remove();
+}
+
+setInterval(() => { $("#clock").textContent = new Date().toLocaleTimeString(); }, 1000);
+refresh(); setInterval(refresh, 3000);
+</script>
+</body>
+</html>
